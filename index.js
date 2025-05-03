@@ -1,39 +1,67 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+import express from 'express';
+import bodyParser from 'body-parser';
 
-app.use(cors());
-app.use(express.json());
+const app = express();
+app.use(bodyParser.json());
 
 app.post('/', (req, res) => {
-  const { vg_filesupload_response } = req.body;
-
-  let debug = '';
-  let image_url = '', image2_url = '', image3_url = '', image4_url = '';
-
   try {
-    const parsed = JSON.parse(vg_filesupload_response);
-    const files = parsed?.files || [];
+    let files = [];
 
-    image_url  = files[0]?.url || '';
-    image2_url = files[1]?.url || '';
-    image3_url = files[2]?.url || '';
-    image4_url = files[3]?.url || '';
+    // Step 1: Check if the field is a JSON string or an actual object
+    const raw = req.body.vg_filesupload_response;
 
-    debug = `Parsed ${files.length} files successfully.`;
+    if (typeof raw === 'string') {
+      try {
+        files = JSON.parse(raw).files || [];
+      } catch (innerErr) {
+        return res.json({
+          debug: 'Failed to parse nested JSON string in vg_filesupload_response',
+          image_url: '',
+          image2_url: '',
+          image3_url: '',
+          image4_url: ''
+        });
+      }
+    } else if (typeof raw === 'object') {
+      files = raw.files || [];
+    } else {
+      return res.json({
+        debug: 'vg_filesupload_response is neither string nor object',
+        image_url: '',
+        image2_url: '',
+        image3_url: '',
+        image4_url: ''
+      });
+    }
+
+    // Step 2: Extract up to 4 image URLs
+    const image_url = files[0]?.url || '';
+    const image2_url = files[1]?.url || '';
+    const image3_url = files[2]?.url || '';
+    const image4_url = files[3]?.url || '';
+
+    return res.json({
+      image_url,
+      image2_url,
+      image3_url,
+      image4_url,
+      debug: `Successfully parsed ${files.length} file(s)`
+    });
+
   } catch (err) {
-    debug = `Error parsing vg_filesupload_response: ${err.message}`;
+    return res.json({
+      image_url: '',
+      image2_url: '',
+      image3_url: '',
+      image4_url: '',
+      debug: `Top-level failure: ${err.message}`
+    });
   }
-
-  return res.json({
-    image_url,
-    image2_url,
-    image3_url,
-    image4_url,
-    debug
-  });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server live on port ${PORT}`));
+app.listen(10000, () => {
+  console.log('✅ Server live on port 10000');
+});
+
 
