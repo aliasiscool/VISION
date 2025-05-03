@@ -2,7 +2,6 @@
   "name": "vg-image-parser",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
@@ -11,4 +10,3 @@
     "cors": "^2.8.5"
   }
 }
-
